@@ -1,7 +1,9 @@
 package com.project.ridex_backend.controller;
 
-import com.project.ridex_backend.dto.UserResponse;
-import com.project.ridex_backend.entity.UserRegisterRequest;
+import com.project.ridex_backend.dto.request.UserLoginRequest;
+import com.project.ridex_backend.dto.request.UserRegisterRequest;
+import com.project.ridex_backend.dto.response.AuthResponse;
+import com.project.ridex_backend.dto.response.UserResponse;
 import com.project.ridex_backend.exception.UserAlreadyExistsException;
 import com.project.ridex_backend.service.UserService;
 import jakarta.validation.Valid;
@@ -23,9 +25,8 @@ public class UserController {
     private UserService userService;
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegisterRequest request) {
-        logger.info("{} user started to register", request.getName());
-
+    public ResponseEntity<UserResponse> registerUser(@Valid @RequestBody UserRegisterRequest request) {
+        logger.info("{} user started to register", request.getUsername());
         if (userService.existsByEmail(request.getEmail())) {
             logger.error("{} this email already exists", request.getEmail());
             throw new UserAlreadyExistsException("User with this email already exists!");
@@ -34,5 +35,11 @@ public class UserController {
         UserResponse userResponse = userService.registerNewUser(request);
 
         return ResponseEntity.ok(userResponse);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<AuthResponse> loginUser(@Valid @RequestBody UserLoginRequest request) {
+        AuthResponse authResponse = userService.loginUser(request);
+        return ResponseEntity.ok(authResponse);
     }
 }

@@ -1,8 +1,9 @@
 package com.project.ridex_backend.service;
 
-import com.project.ridex_backend.dto.UserResponse;
-import com.project.ridex_backend.entity.UserRegisterRequest;
-import com.project.ridex_backend.entity.UserRole;
+import com.project.ridex_backend.dto.request.UserRegisterRequest;
+import com.project.ridex_backend.dto.response.UserResponse;
+import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.UserRole;
 import com.project.ridex_backend.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,14 +46,14 @@ public class UserServiceTest {
         when(bCryptPasswordEncoder.encode(anyString())).thenReturn("encodedPassword");
 
         UserRegisterRequest mockUser = UserRegisterRequest.builder()
-                .name("fathima")
+                .username("fathima")
                 .email("fathima@gmail.com")
                 .password("password")
                 .role(UserRole.RIDER)
                 .build();
 
         when(userRepository.save(any())).thenAnswer(invocationOnMock -> {
-            UserRegisterRequest arg = invocationOnMock.getArgument(0);
+            User arg = invocationOnMock.getArgument(0);
             arg.setId(1L);
             return arg;
         });
@@ -62,13 +63,13 @@ public class UserServiceTest {
 
         //Assert
         assertThat(resp.getId()).isEqualTo(1L);
-        assertThat(resp.getName()).isEqualTo("fathima");
+        assertThat(resp.getUsername()).isEqualTo("fathima");
         assertThat(resp.getEmail()).isEqualTo("fathima@gmail.com");
         assertThat(resp.getRole()).isEqualTo(UserRole.RIDER);
 
-        ArgumentCaptor<UserRegisterRequest> captor = ArgumentCaptor.forClass(UserRegisterRequest.class);
+        ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userRepository, times(1)).save(captor.capture());
-        UserRegisterRequest captured = captor.getValue();
+        User captured = captor.getValue();
         assertThat(captured.getPassword()).isEqualTo("encodedPassword");
 
         verifyNoMoreInteractions(userRepository, bCryptPasswordEncoder);

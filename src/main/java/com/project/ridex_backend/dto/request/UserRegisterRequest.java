@@ -1,24 +1,21 @@
-package com.project.ridex_backend.entity;
+package com.project.ridex_backend.dto.request;
 
-import jakarta.persistence.*;
+import com.project.ridex_backend.enums.UserRole;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
 
-@Entity
-@Table(name = "users", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
-@Getter
-@Setter
-@NoArgsConstructor
 @AllArgsConstructor
+@Getter
 @Builder
 public class UserRegisterRequest {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     @NotBlank(message = "Name is required")
-    private String name;
+    private String username;
     @Email(message = "Email should be valid")
     @NotBlank(message = "Email is required")
     private String email;
@@ -27,5 +24,4 @@ public class UserRegisterRequest {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserRole role;
-
 }
