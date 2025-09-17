@@ -7,7 +7,7 @@ import com.project.ridex_backend.dto.response.UserResponse;
 import com.project.ridex_backend.entity.User;
 import com.project.ridex_backend.exception.InvalidLoginDetailsException;
 import com.project.ridex_backend.repository.UserRepository;
-import com.project.ridex_backend.security.JwtService;
+import com.project.ridex_backend.security.jwt.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;

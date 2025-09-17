@@ -1,6 +1,8 @@
-package com.project.ridex_backend.security;
+package com.project.ridex_backend.security.jwt;
 
 import com.project.ridex_backend.entity.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.slf4j.Logger;
@@ -38,4 +40,26 @@ public class JwtService {
                 .compact();
     }
 
+    public boolean validateToken(String token) {
+        try {
+            Jwts
+                    .parserBuilder()
+                    .setSigningKey(key)
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException ex) {
+            logger.error("Invalid JWT Token");
+            return false;
+        }
+    }
+
+    public String extractUserId(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject();
+    }
 }
