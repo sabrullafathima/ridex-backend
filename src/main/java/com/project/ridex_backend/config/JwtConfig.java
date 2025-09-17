@@ -10,7 +10,7 @@ import java.util.Base64;
 
 @Configuration
 public class JwtConfig {
-    @Value("${jwt.secret}")
+    @Value("${JWT_SECRET}")
     private String secret;
 
     @Bean

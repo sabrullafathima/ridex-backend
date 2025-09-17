@@ -20,7 +20,7 @@ public class JwtService {
     private static final String ROLE = "role";
     private final SecretKey key;
 
-    @Value("${jwt.expiration}")
+    @Value("${JWT_EXPIRATION}")
     private long jwtExpirationMs;
 
     public JwtService(SecretKey key) {
