@@ -1,10 +1,12 @@
 package com.project.ridex_backend.utils;
 
 import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.UserRole;
 import com.project.ridex_backend.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -36,5 +38,12 @@ public class SecurityUtil {
             logger.error("User not found for userId: {}", userId);
             return new RuntimeException("User not found");
         });
+    }
+
+    public boolean extractCurrentUserRole(UserRole requiredRole) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role-> role.equals(requiredRole.name()));
     }
 }

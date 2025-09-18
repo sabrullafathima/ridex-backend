@@ -55,10 +55,15 @@ public class UserController {
 
     @PostMapping("/rides/{rideId}/accept")
     public ResponseEntity<RideResponse> acceptRide(@Valid @PathVariable Long rideId) {
-        logger.info("Received ride request from {}: ", rideId);
+        logger.info("Received ride request | rideId: {}: ", rideId);
         RideResponse rideResponse = rideService.acceptRide(rideId);
-        logger.info("RideId: {} accepted by driverId: {}", rideId, rideResponse.getDriverId());
+        logger.info("Ride accepted | rideId: {}, driverId: {}", rideId, rideResponse.getDriverId());
         return ResponseEntity.ok(rideResponse);
     }
 
+    @PostMapping("/rides/{rideId}/complete")
+    public ResponseEntity<RideResponse> completeRide(@Valid @PathVariable Long rideId) {
+        RideResponse rideResponse = rideService.completeRide(rideId);
+        return ResponseEntity.ok(rideResponse);
+    }
 }
