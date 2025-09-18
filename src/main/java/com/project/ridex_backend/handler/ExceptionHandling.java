@@ -1,8 +1,7 @@
 package com.project.ridex_backend.handler;
 
 import com.project.ridex_backend.dto.response.ErrorResponse;
-import com.project.ridex_backend.exception.InvalidLoginDetailsException;
-import com.project.ridex_backend.exception.UserAlreadyExistsException;
+import com.project.ridex_backend.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -33,8 +32,28 @@ public class ExceptionHandling {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(UnauthorizedRideRequestException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedRideRequestException(UnauthorizedRideRequestException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .message(ex.getMessage())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(DriverNotAvailableException.class)
+    public ResponseEntity<ErrorResponse> handleDriverNotAvailableException(DriverNotAvailableException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .message(ex.getMessage())
+                .status(HttpStatus.NOT_FOUND.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+    }
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> unknownException(Exception ex) {
+    public ResponseEntity<ErrorResponse> handleUnknownException(Exception ex) {
         ErrorResponse error = ErrorResponse.builder()
                 .message("Something went wrong: " + ex.getMessage())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

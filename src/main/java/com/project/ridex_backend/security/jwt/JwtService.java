@@ -29,7 +29,7 @@ public class JwtService {
 
     public String generateAccessToken(User registeredUser) {
         logger.info("Generating JWT token for user: {}", registeredUser.getUsername());
-        Map<String, Object> claims = Map.of(ROLE, registeredUser.getRole());
+        Map<String, Object> claims = Map.of(ROLE, registeredUser.getRole().toString());
 
         return Jwts.builder()
                 .addClaims(claims)
@@ -61,5 +61,20 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody();
         return claims.getSubject();
+    }
+
+    public String extractRole(String token) {
+        Claims claims = extractAllClaims(token);
+        return claims.get(ROLE, String.class); // why it map with string class when we create it we did Map.of(ROLE, registeredUser.getRole().toString()); like this
+
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }
