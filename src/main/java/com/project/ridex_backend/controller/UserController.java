@@ -2,16 +2,15 @@ package com.project.ridex_backend.controller;
 
 import com.project.ridex_backend.dto.request.RideRequest;
 import com.project.ridex_backend.dto.response.RideResponse;
+import com.project.ridex_backend.dto.response.UserResponse;
 import com.project.ridex_backend.service.RideService;
+import com.project.ridex_backend.service.UserService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/api/user")
@@ -20,9 +19,11 @@ public class UserController {
     private static final Logger logger = LoggerFactory.getLogger(UserController.class);
 
     private final RideService rideService;
+    private final UserService userService;
 
-    public UserController(RideService rideService) {
+    public UserController(RideService rideService, UserService userService) {
         this.rideService = rideService;
+        this.userService = userService;
     }
 
     @GetMapping("/profile")
@@ -30,11 +31,33 @@ public class UserController {
         return ResponseEntity.ok("Hello User This is Your Profile");
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<UserResponse> getCurrentUserDetails() {
+        UserResponse userResponse = userService.getCurrentUserDetails();
+        logger.info("Fetching current user details | userId: {}", userResponse.getId());
+        return ResponseEntity.ok(userResponse);
+    }
+
+    @GetMapping("/details/{userId}")
+    public ResponseEntity<UserResponse> getUserDetailsById(@Valid @PathVariable Long userId) {
+        UserResponse userResponse = userService.getUserDetailsById(userId);
+        logger.info("successfully fetch the userId details : {}", userId);
+        return ResponseEntity.ok(userResponse);
+    }
+
     @PostMapping("/rides/request")
     public ResponseEntity<RideResponse> requestRide(@Valid @RequestBody RideRequest rideRequest) {
         logger.info("Received ride request from user");
         RideResponse rideResponse = rideService.requestRide(rideRequest);
         logger.info("Ride request processed successfully for riderId: {}", rideResponse.getRiderId());
+        return ResponseEntity.ok(rideResponse);
+    }
+
+    @PostMapping("/rides/{rideId}/accept")
+    public ResponseEntity<RideResponse> acceptRide(@Valid @PathVariable Long rideId) {
+        logger.info("Received ride request from {}: ", rideId);
+        RideResponse rideResponse = rideService.acceptRide(rideId);
+        logger.info("RideId: {} accepted by driverId: {}", rideId, rideResponse.getDriverId());
         return ResponseEntity.ok(rideResponse);
     }
 

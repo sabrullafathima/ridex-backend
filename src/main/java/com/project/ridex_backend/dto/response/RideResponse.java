@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class RideResponse {
+    private Long rideId;
     private String riderId;
     private String driverId;
     private String pickup;
