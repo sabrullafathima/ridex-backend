@@ -12,6 +12,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/api/user")
 public class UserController {
@@ -36,6 +38,22 @@ public class UserController {
         UserResponse userResponse = userService.getCurrentUserDetails();
         logger.info("Fetching current user details | userId: {}", userResponse.getId());
         return ResponseEntity.ok(userResponse);
+    }
+
+    @GetMapping("/rides")
+    public ResponseEntity<List<RideResponse>> getRidesForDrivers() {
+        List<RideResponse> rides = rideService.getRidesForDrivers();
+        return rides != null
+                ? ResponseEntity.ok(rides)
+                : ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/rides/current")
+    public ResponseEntity<RideResponse> getRidesForCurrentDriver() {
+        RideResponse ride = rideService.getRidesForCurrentDriver();
+        return ride!= null
+                ? ResponseEntity.ok(ride)
+                : ResponseEntity.noContent().build();
     }
 
     @GetMapping("/details/{userId}")

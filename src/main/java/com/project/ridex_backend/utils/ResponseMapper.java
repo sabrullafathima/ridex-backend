@@ -13,7 +13,7 @@ public class ResponseMapper {
                 .driverId(ride.getDriver().getId().toString())
                 .pickup(ride.getPickup())
                 .destination(ride.getDestination())
-                .status(ride.getStatus())
+                .status(ride.getStatus().name())
                 .build();
     }
 
