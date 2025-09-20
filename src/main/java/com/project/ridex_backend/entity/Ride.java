@@ -1,5 +1,7 @@
 package com.project.ridex_backend.entity;
 
+import com.project.ridex_backend.enums.RideStatus;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,5 +24,7 @@ public class Ride {
     private User driver;
     private String pickup;
     private String destination;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RideStatus status;
 }

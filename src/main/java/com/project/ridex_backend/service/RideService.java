@@ -14,12 +14,18 @@ import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.utils.ResponseMapper;
 import com.project.ridex_backend.utils.SecurityUtil;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Null;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RideService {
@@ -76,13 +82,13 @@ public class RideService {
                 .driver(driver)
                 .pickup(request.getPickup())
                 .destination(request.getDestination())
-                .status(RideStatus.REQUESTED.name())  //TODO: handle actual driver response logic
+                .status(RideStatus.REQUESTED)  //TODO: handle actual driver response logic
                 .build();
     }
 
     private void validateUserRole(UserRole requiredRole) {
-        boolean haRequiredRole = securityUtil.extractCurrentUserRole(requiredRole);
-        if (!haRequiredRole) {
+        boolean hasRequiredRole = securityUtil.extractCurrentUserRole(requiredRole);
+        if (!hasRequiredRole) {
             logger.warn("Access denied | Required role: {} ", requiredRole);
             throw new AccessDeniedException(requiredRole + " role required to perform this action");
         }
@@ -97,7 +103,7 @@ public class RideService {
         logger.info("Find ride | rideId : {}", rideId);
         Ride ride = findRideById(rideId);
         ride.setDriver(securityUtil.extractCurrentUser());
-        ride.setStatus(RideStatus.ACCEPTED.name());
+        ride.setStatus(RideStatus.ACCEPTED);
         logger.debug("Ride updated | DriverId: {}, Status: {}", ride.getDriver(), ride.getStatus());
         rideRepository.save(ride);
         logger.info("Ride successfully saved -> DB");
@@ -111,7 +117,7 @@ public class RideService {
     public RideResponse completeRide(Long rideId) {
         validateUserRole(UserRole.DRIVER);
         Ride ride = findRideById(rideId);
-        ride.setStatus(RideStatus.COMPLETED.name());
+        ride.setStatus(RideStatus.COMPLETED);
         rideRepository.save(ride);
 
         RideResponse rideResponse = ResponseMapper.toRideResponse(ride);
@@ -125,5 +131,37 @@ public class RideService {
             logger.error("Ride NOT_FOUND | rideId: {}", rideId);
             return new RideNotFoundException("Ride NOT_FOUND | rideId: " + rideId);
         });
+    }
+
+    public List<RideResponse> getRidesForDrivers() {
+        validateUserRole(UserRole.DRIVER);
+        Long driverId = securityUtil.extractCurrentUser().getId();
+        logger.info("RIDES_REQUEST | START | driverId: {}", driverId);
+
+        List<Ride> rides = rideRepository.findRideByStatus(RideStatus.REQUESTED);
+        if (rides.isEmpty()) {
+            logger.info("RIDES_NOT_FOUND | status: REQUESTED");
+            return null;
+        }
+        logger.debug("IDES_FOUND | count: {} | rideIds: {}",
+                rides.size(),
+                rides.stream().map(Ride::getId).collect(Collectors.toList()));
+
+        return rides.stream()
+                .map(ResponseMapper::toRideResponse)
+                .collect(Collectors.toList());
+
+    }
+
+    public RideResponse getRidesForCurrentDriver() {
+        validateUserRole(UserRole.DRIVER);
+        Long driverId = securityUtil.extractCurrentUser().getId();
+        logger.info("CURRENT_RIDE_REQUEST | START | driverId: {}", driverId);
+        Ride ride = rideRepository.findRideByStatusAndDriverId(RideStatus.ACCEPTED, driverId);
+        if (ride == null) {
+            logger.debug("CURRENT_RIDE_FOUND | driverId: {}", driverId);
+             return null;
+        } return ResponseMapper.toRideResponse(ride);
+
     }
 }
