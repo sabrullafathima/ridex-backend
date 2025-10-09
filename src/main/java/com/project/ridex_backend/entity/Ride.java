@@ -1,7 +1,6 @@
 package com.project.ridex_backend.entity;
 
 import com.project.ridex_backend.enums.RideStatus;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,16 +14,25 @@ import lombok.*;
 public class Ride {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
+
     @ManyToOne
     @JoinColumn(name = "riderId", nullable = false)
     private User rider;
+
     @ManyToOne
     @JoinColumn(name = "driverId", nullable = false)
     private User driver;
+
     private String pickup;
     private String destination;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RideStatus status;
+
+    @OneToOne(mappedBy = "ride", cascade = CascadeType.ALL)
+    private Payment payment;
+
+    private double estimatedFare;
 }

@@ -1,45 +1,38 @@
 package com.project.ridex_backend.service;
 
+import com.project.ridex_backend.dto.request.PaymentRequest;
 import com.project.ridex_backend.dto.request.RideRequest;
 import com.project.ridex_backend.dto.response.RideResponse;
 import com.project.ridex_backend.entity.Ride;
 import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.PaymentMethod;
 import com.project.ridex_backend.enums.RideStatus;
 import com.project.ridex_backend.enums.UserRole;
+import com.project.ridex_backend.events.RideRequestedEvent;
 import com.project.ridex_backend.exception.AccessDeniedException;
-import com.project.ridex_backend.exception.DriverNotAvailableException;
 import com.project.ridex_backend.exception.RideNotFoundException;
 import com.project.ridex_backend.repository.RideRepository;
-import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.utils.ResponseMapper;
 import com.project.ridex_backend.utils.SecurityUtil;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Null;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RideService {
     private static final Logger logger = LoggerFactory.getLogger(RideService.class);
 
-    private final UserRepository userRepository;
     private final RideRepository rideRepository;
     private final SecurityUtil securityUtil;
-
-    public RideService(UserRepository userRepository, RideRepository rideRepository, SecurityUtil securityUtil) {
-        this.userRepository = userRepository;
-        this.rideRepository = rideRepository;
-        this.securityUtil = securityUtil;
-    }
+    private final PaymentService paymentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     public RideResponse requestRide(RideRequest request) {
         logger.info("Processing ride request | pickup: {} destination: {}", request.getPickup(), request.getDestination());
@@ -47,42 +40,30 @@ public class RideService {
         validateUserRole(UserRole.RIDER);
 
         User rider = securityUtil.extractCurrentUser();
-        logger.debug("Authenticated rider | userId: {}", rider.getId());
+        logger.info("Authenticated rider | riderId: {}", rider.getId());
 
-        // TODO: extend with select driver by near and available
-        User driver = findAvailableDriver();
-        logger.debug("Selected driver | userId: {}", driver.getId());
-
-        Ride ride = createRide(rider, driver, request);
+        Ride ride = createRide(rider, request);
         rideRepository.save(ride);
-        logger.info("Ride saved successfully | rideId: {}", ride.getId());
+        logger.info("Saved Ride To DB successfully | rideId: {}", ride.getId());
 
-        //Current API: directly assigns a driver and returns ride info — rider sees assigned driver immediately.
-        //TODO: the API should create a ride request without a driver, notify driver(s), and update ride when a driver accepts.
+        eventPublisher.publishEvent(new RideRequestedEvent(ride.getId()));
 
-        RideResponse rideResponse = ResponseMapper.toRideResponse(ride);
-        logger.debug("RideResponse prepared: {}", rideResponse);
-        return rideResponse;
+        return ResponseMapper.toRideResponse(ride);
     }
 
-    private User findAvailableDriver() {
-        return userRepository.findFirstByRole(UserRole.DRIVER)
-                .orElseThrow(() -> {
-                    logger.warn("No available drivers | at: {}", LocalDateTime.now());
-                    return new DriverNotAvailableException("No drivers available at the moment");
-                });
-    }
+    private Ride createRide(User rider, RideRequest request) {
+        logger.debug("Creating Ride entity | riderId: {}", rider.getId());
 
-    private Ride createRide(User rider, User driver, RideRequest request) {
-        logger.debug("Creating Ride entity | riderId: {} driverId: {}", rider.getId(), driver.getId());
-        //TODO: should create an api to send request to driver;
+        double estimatedFare = paymentService.calculateEstimatedFareForDemo(request.getPickup(), request.getDestination());
 
         return Ride.builder()
                 .rider(rider)
-                .driver(driver)
+                .driver(null)
                 .pickup(request.getPickup())
                 .destination(request.getDestination())
-                .status(RideStatus.REQUESTED)  //TODO: handle actual driver response logic
+                .status(RideStatus.REQUESTED)
+                .estimatedFare(estimatedFare)
+                .payment(null)
                 .build();
     }
 
@@ -94,16 +75,13 @@ public class RideService {
         }
     }
 
-    private void validateRider(Authentication auth) {
-
-    }
-
     public RideResponse acceptRide(@Valid Long rideId) {
         validateUserRole(UserRole.DRIVER);
         logger.info("Find ride | rideId : {}", rideId);
         Ride ride = findRideById(rideId);
         ride.setDriver(securityUtil.extractCurrentUser());
         ride.setStatus(RideStatus.ACCEPTED);
+        ride.setPayment(paymentService.createPayment(ride));
         logger.debug("Ride updated | DriverId: {}, Status: {}", ride.getDriver(), ride.getStatus());
         rideRepository.save(ride);
         logger.info("Ride successfully saved -> DB");
@@ -119,6 +97,13 @@ public class RideService {
         Ride ride = findRideById(rideId);
         ride.setStatus(RideStatus.COMPLETED);
         rideRepository.save(ride);
+
+        PaymentRequest paymentRequest = PaymentRequest.builder()
+                .pickupLocation(ride.getPickup())
+                .dropLocation(ride.getDestination())
+                .paymentMethod(PaymentMethod.CARD)
+                .build();
+        paymentService.processPayment(ride, paymentRequest);
 
         RideResponse rideResponse = ResponseMapper.toRideResponse(ride);
         //TODO: send notification to the rider;
@@ -160,8 +145,9 @@ public class RideService {
         Ride ride = rideRepository.findRideByStatusAndDriverId(RideStatus.ACCEPTED, driverId);
         if (ride == null) {
             logger.debug("CURRENT_RIDE_FOUND | driverId: {}", driverId);
-             return null;
-        } return ResponseMapper.toRideResponse(ride);
+            return null;
+        }
+        return ResponseMapper.toRideResponse(ride);
 
     }
 }

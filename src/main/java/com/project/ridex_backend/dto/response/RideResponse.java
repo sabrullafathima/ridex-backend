@@ -11,9 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RideResponse {
     private Long rideId;
-    private String riderId;
-    private String driverId;
+    private Long riderId;
+    private Long driverId;
     private String pickup;
     private String destination;
     private String status;
+    private double estimatedFare;
+    private PaymentResponse payment;
 }

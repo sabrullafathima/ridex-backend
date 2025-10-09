@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,7 @@ import java.util.Date;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
     private static final String ROLE = "role";
@@ -22,10 +24,6 @@ public class JwtService {
 
     @Value("${JWT_EXPIRATION}")
     private long jwtExpirationMs;
-
-    public JwtService(SecretKey key) {
-        this.key = key;
-    }
 
     public String generateAccessToken(User registeredUser) {
         logger.info("Generating JWT token for user: {}", registeredUser.getUsername());

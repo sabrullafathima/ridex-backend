@@ -10,14 +10,14 @@ import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.security.jwt.JwtService;
 import com.project.ridex_backend.utils.ResponseMapper;
 import com.project.ridex_backend.utils.SecurityUtil;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
@@ -27,13 +27,6 @@ public class UserService {
     private final JwtService jwtService;
     private final SecurityUtil securityUtil;
 
-
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder, JwtService jwtService, SecurityUtil securityUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.securityUtil = securityUtil;
-    }
 
     public UserResponse registerNewUser(UserRegisterRequest request) {
         User user = User.builder()
@@ -66,7 +59,6 @@ public class UserService {
     }
 
     public UserResponse getCurrentUserDetails() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User user = securityUtil.extractCurrentUser();
         return ResponseMapper.toUserResponse(user);
     }
