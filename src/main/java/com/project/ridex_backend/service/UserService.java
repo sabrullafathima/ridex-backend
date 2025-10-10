@@ -5,6 +5,8 @@ import com.project.ridex_backend.dto.request.UserRegisterRequest;
 import com.project.ridex_backend.dto.response.AuthResponse;
 import com.project.ridex_backend.dto.response.UserResponse;
 import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.UserRole;
+import com.project.ridex_backend.exception.AccessDeniedException;
 import com.project.ridex_backend.exception.InvalidLoginDetailsException;
 import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.security.jwt.JwtService;
@@ -72,4 +74,12 @@ public class UserService {
         return ResponseMapper.toUserResponse(user);
     }
 
+    public void validateUserRole(UserRole requiredRole) {
+        boolean hasRequiredRole = securityUtil.extractCurrentUserRole(requiredRole);
+        if (!hasRequiredRole) {
+            logger.warn("Access denied | Required role: {} ", requiredRole);
+            throw new AccessDeniedException(requiredRole + " role required to perform this action");
+        }
+        logger.info("UserRole is valid");
+    }
 }

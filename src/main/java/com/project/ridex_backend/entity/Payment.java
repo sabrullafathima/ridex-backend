@@ -36,7 +36,7 @@ public class Payment {
     private Ride ride;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private PaymentMethod paymentMethod;
 
     private double amount;

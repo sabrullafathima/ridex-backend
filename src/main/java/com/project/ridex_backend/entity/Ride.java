@@ -16,12 +16,15 @@ public class Ride {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @ManyToOne
     @JoinColumn(name = "riderId", nullable = false)
     private User rider;
 
     @ManyToOne
-    @JoinColumn(name = "driverId", nullable = false)
+    @JoinColumn(name = "driverId", nullable = true)
     private User driver;
 
     private String pickup;

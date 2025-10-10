@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class NotificationPayload {
     private Long notificationId;
     private Long rideId;
+    private Long recipientId;
     private String message;
     private LocalDateTime createdAt;
     private NotificationType type;

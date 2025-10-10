@@ -8,12 +8,15 @@ import com.project.ridex_backend.entity.User;
 import com.project.ridex_backend.enums.PaymentMethod;
 import com.project.ridex_backend.enums.RideStatus;
 import com.project.ridex_backend.enums.UserRole;
+import com.project.ridex_backend.events.RideAcceptedEvent;
 import com.project.ridex_backend.events.RideRequestedEvent;
+import com.project.ridex_backend.events.RideCompletedEvent;
 import com.project.ridex_backend.exception.AccessDeniedException;
 import com.project.ridex_backend.exception.RideNotFoundException;
 import com.project.ridex_backend.repository.RideRepository;
 import com.project.ridex_backend.utils.ResponseMapper;
 import com.project.ridex_backend.utils.SecurityUtil;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -33,7 +36,10 @@ public class RideService {
     private final SecurityUtil securityUtil;
     private final PaymentService paymentService;
     private final ApplicationEventPublisher eventPublisher;
+    private final UserService userService;
 
+
+    @Transactional
     public RideResponse requestRide(RideRequest request) {
         logger.info("Processing ride request | pickup: {} destination: {}", request.getPickup(), request.getDestination());
 
@@ -44,7 +50,8 @@ public class RideService {
 
         Ride ride = createRide(rider, request);
         rideRepository.save(ride);
-        logger.info("Saved Ride To DB successfully | rideId: {}", ride.getId());
+        rideRepository.flush();
+        logger.info("Saved Ride to DB successfully | rideId: {}", ride.getId());
 
         eventPublisher.publishEvent(new RideRequestedEvent(ride.getId()));
 
@@ -75,40 +82,49 @@ public class RideService {
         }
     }
 
+
+    @Transactional
     public RideResponse acceptRide(@Valid Long rideId) {
-        validateUserRole(UserRole.DRIVER);
-        logger.info("Find ride | rideId : {}", rideId);
+        logger.info("Processing Accept ride request | rideId: {}", rideId);
+
+        userService.validateUserRole(UserRole.DRIVER);
+
+        logger.info("Finding ride | rideId : {}", rideId);
         Ride ride = findRideById(rideId);
+
         ride.setDriver(securityUtil.extractCurrentUser());
         ride.setStatus(RideStatus.ACCEPTED);
         ride.setPayment(paymentService.createPayment(ride));
-        logger.debug("Ride updated | DriverId: {}, Status: {}", ride.getDriver(), ride.getStatus());
         rideRepository.save(ride);
-        logger.info("Ride successfully saved -> DB");
+        logger.info("Updated Ride successfully | DriverId: {}, Status: {}", ride.getDriver(), ride.getStatus());
 
-        RideResponse rideResponse = ResponseMapper.toRideResponse(ride);
-        //TODO: send notification to the requested rider;
-        logger.debug("Updated rideResponse | ACCEPTED, rideResponse: {}", rideResponse);
-        return rideResponse;
+        eventPublisher.publishEvent(new RideAcceptedEvent(ride));
+
+        return ResponseMapper.toRideResponse(ride);
     }
 
+    @Transactional
     public RideResponse completeRide(Long rideId) {
+        logger.info("Processing ride completion | rideId: {} ", rideId);
+
         validateUserRole(UserRole.DRIVER);
+
         Ride ride = findRideById(rideId);
         ride.setStatus(RideStatus.COMPLETED);
         rideRepository.save(ride);
+        logger.info("Updated Ride successfully | rideId: {} | DriverId: {} | Status: {}", ride.getId(), ride.getDriver(), ride.getStatus());
+
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .pickupLocation(ride.getPickup())
                 .dropLocation(ride.getDestination())
-                .paymentMethod(PaymentMethod.CARD)
+                .paymentMethod(ride.getPayment().getPaymentMethod()) //TODO need to select through input
                 .build();
         paymentService.processPayment(ride, paymentRequest);
 
-        RideResponse rideResponse = ResponseMapper.toRideResponse(ride);
-        //TODO: send notification to the rider;
-        logger.debug("Updated rideResponse status | COMPLETED, rideResponse: {}", rideResponse);
-        return rideResponse;
+        eventPublisher.publishEvent(new RideCompletedEvent(ride));
+
+        return ResponseMapper.toRideResponse(ride);
     }
 
     private Ride findRideById(Long rideId) {

@@ -3,22 +3,18 @@ package com.project.ridex_backend.events.listener;
 import com.project.ridex_backend.entity.Notification;
 import com.project.ridex_backend.entity.Ride;
 import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.RecipientType;
 import com.project.ridex_backend.enums.UserRole;
 import com.project.ridex_backend.events.RideRequestedEvent;
 import com.project.ridex_backend.exception.RideNotFoundException;
 import com.project.ridex_backend.repository.RideRepository;
 import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.service.NotificationService;
-import com.project.ridex_backend.websocket.dto.NotificationPayload;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
-import org.springframework.util.MimeTypeUtils;
 
 import java.util.List;
 
@@ -27,7 +23,6 @@ import java.util.List;
 public class RideRequestedEventListener {
     private static final Logger logger = LoggerFactory.getLogger(RideRequestedEventListener.class);
 
-    private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final RideRepository rideRepository;
@@ -45,29 +40,8 @@ public class RideRequestedEventListener {
         Ride ride = rideRepository.findById(e.getRideId()).orElseThrow(() -> new RideNotFoundException("Ride Not Found | rideId: " + e.getRideId()));
         for (User driver : nearbyDrivers) {
             Notification notification = notificationService.createNotificationForRideRequest(ride, driver);
-            logger.info("Sending ride request notification to driverId: {}", driver.getId());
-            notifyDriver(notification);
+            notificationService.sendNotification(notification, RecipientType.DRIVER);
         }
 
-    }
-
-    private void notifyDriver(Notification notify) {
-        logger.info("Preparing NotificationPayload | driverId: {} | rideId: {}", notify.getRecipient().getId(), notify.getRide().getId());
-        NotificationPayload payload = NotificationPayload.builder()
-                .notificationId(notify.getId())
-                .rideId(notify.getRide().getId())
-                .createdAt(notify.getCreatedAt())
-                .type(notify.getType())
-                .message(notify.getMessage())
-                .build();
-
-        logger.info("Sending Notification | driverId: {}", notify.getRecipient().getId());
-        messagingTemplate.convertAndSend(
-                "/topic/driver/" + notify.getRecipient().getId(),
-                MessageBuilder
-                        .withPayload(payload)
-                        .setHeader(MessageHeaders.CONTENT_TYPE, MimeTypeUtils.APPLICATION_JSON)
-                        .build()
-        );
     }
 }

@@ -2,6 +2,9 @@ package com.project.ridex_backend.handler;
 
 import com.project.ridex_backend.dto.response.ErrorResponse;
 import com.project.ridex_backend.exception.*;
+import jakarta.persistence.OptimisticLockException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -11,6 +14,7 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class ExceptionHandling {
+    private static final Logger logger = LoggerFactory.getLogger(ExceptionHandling.class);
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException ex) {
@@ -60,6 +64,17 @@ public class ExceptionHandling {
                 .timestamp(LocalDateTime.now())
                 .build();
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(OptimisticLockException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLockException(OptimisticLockException ex) {
+        logger.warn("Optimistic lock failed: {}", ex.getMessage());
+        ErrorResponse error = ErrorResponse.builder()
+                .message("Ride already accepted")
+                .status(HttpStatus.CONFLICT.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(Exception.class)

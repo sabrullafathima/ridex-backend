@@ -69,13 +69,14 @@ public class UserController {
 
     @PostMapping("/rides/{rideId}/accept")
     public ResponseEntity<RideResponse> acceptRide(@Valid @PathVariable Long rideId) {
-        logger.info("Received ride request | rideId: {}: ", rideId);
+        logger.info("API call: POST /rides/{rideId}/accept | userId: {}", userService.getCurrentUserDetails().getId());
         RideResponse rideResponse = rideService.acceptRide(rideId);
         return ResponseEntity.ok(rideResponse);
     }
 
     @PostMapping("/rides/{rideId}/complete")
     public ResponseEntity<RideResponse> completeRide(@Valid @PathVariable Long rideId) {
+        logger.info("API call: POST /rides/{rideId}/complete | userId: {}", userService.getCurrentUserDetails().getId());
         RideResponse rideResponse = rideService.completeRide(rideId);
         return ResponseEntity.ok(rideResponse);
     }
