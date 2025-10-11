@@ -77,6 +77,16 @@ public class ExceptionHandling {
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex) {
+        ErrorResponse error = ErrorResponse.builder()
+                .message("Something went wrong: " + ex.getMessage())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknownException(Exception ex) {
         ErrorResponse error = ErrorResponse.builder()

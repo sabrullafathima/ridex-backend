@@ -3,7 +3,7 @@ package com.project.ridex_backend.events.listener;
 import com.project.ridex_backend.entity.Notification;
 import com.project.ridex_backend.entity.Ride;
 import com.project.ridex_backend.entity.User;
-import com.project.ridex_backend.enums.RecipientType;
+import com.project.ridex_backend.enums.UserType;
 import com.project.ridex_backend.events.RideCompletedEvent;
 import com.project.ridex_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -26,19 +26,26 @@ public class RideCompletedEventListener {
         sendRideCompletionNotification(
                 e.getRide(),
                 e.getRide().getDriver(),
-                RecipientType.DRIVER,
+                UserType.DRIVER,
                 "You have completed a ride and earned LKR %s."
         );
+
+        User recipient1 = e.getRide().getDriver();
+        notificationService.sendEmailNotification(recipient1);
 
         sendRideCompletionNotification(
                 e.getRide(),
                 e.getRide().getRider(),
-                RecipientType.RIDER,
+                UserType.RIDER,
                 "Your ride is complete. You have paid LKR %s. Thank you for riding with Ridex!"
         );
+
+        User recipient2 = e.getRide().getRider();
+        notificationService.sendEmailNotification(recipient2);
+
     }
 
-    private void sendRideCompletionNotification(Ride ride, User user, RecipientType type, String messageTemplate) {
+    private void sendRideCompletionNotification(Ride ride, User user, UserType type, String messageTemplate) {
         String message = String.format(messageTemplate, ride.getPayment().getAmount());
         Notification notification = notificationService.createNotificationForRideCompletion(ride, user, message);
         notificationService.sendNotification(notification, type);

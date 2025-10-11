@@ -3,7 +3,7 @@ package com.project.ridex_backend.events.listener;
 import com.project.ridex_backend.entity.Notification;
 import com.project.ridex_backend.entity.Ride;
 import com.project.ridex_backend.entity.User;
-import com.project.ridex_backend.enums.RecipientType;
+import com.project.ridex_backend.enums.UserType;
 import com.project.ridex_backend.enums.UserRole;
 import com.project.ridex_backend.events.RideRequestedEvent;
 import com.project.ridex_backend.exception.RideNotFoundException;
@@ -40,7 +40,7 @@ public class RideRequestedEventListener {
         Ride ride = rideRepository.findById(e.getRideId()).orElseThrow(() -> new RideNotFoundException("Ride Not Found | rideId: " + e.getRideId()));
         for (User driver : nearbyDrivers) {
             Notification notification = notificationService.createNotificationForRideRequest(ride, driver);
-            notificationService.sendNotification(notification, RecipientType.DRIVER);
+            notificationService.sendNotification(notification, UserType.DRIVER);
         }
 
     }
