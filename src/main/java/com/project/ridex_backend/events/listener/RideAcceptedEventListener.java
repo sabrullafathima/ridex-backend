@@ -1,9 +1,9 @@
 package com.project.ridex_backend.events.listener;
 
 import com.project.ridex_backend.entity.Notification;
-import com.project.ridex_backend.enums.RecipientType;
+import com.project.ridex_backend.entity.User;
+import com.project.ridex_backend.enums.UserType;
 import com.project.ridex_backend.events.RideAcceptedEvent;
-import com.project.ridex_backend.repository.UserRepository;
 import com.project.ridex_backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -27,6 +27,9 @@ public class RideAcceptedEventListener {
 
         Notification notify = notificationService.createNotificationForRideAccept(e.getRide());
 
-        notificationService.sendNotification(notify, RecipientType.RIDER);
+        notificationService.sendNotification(notify, UserType.RIDER);
+
+        User recipient = e.getRide().getRider();
+        notificationService.sendEmailNotification(recipient);
     }
 }

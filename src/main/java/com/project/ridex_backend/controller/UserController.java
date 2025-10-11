@@ -67,6 +67,20 @@ public class UserController {
         return ResponseEntity.ok(rideResponse);
     }
 
+    @PostMapping("/rides/{rideId}/cancel")
+    public ResponseEntity<RideResponse> cancelRide(@PathVariable Long rideId, @RequestParam String cancelledBy) {
+        logger.info("API call: POST /rides/{rideId}/cancel | userId: {}", userService.getCurrentUserDetails().getId());
+        RideResponse response = rideService.cancelRide(rideId, cancelledBy);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/rides/{rideId}/start")
+    public ResponseEntity<RideResponse> startRide(@Valid @PathVariable Long rideId) {
+        logger.info("API call: POST /{rideId}/start | userId: {}", userService.getCurrentUserDetails().getId());
+        RideResponse response = rideService.startRide(rideId);
+        return ResponseEntity.ok(response);
+    }
+
     @PostMapping("/rides/{rideId}/accept")
     public ResponseEntity<RideResponse> acceptRide(@Valid @PathVariable Long rideId) {
         logger.info("API call: POST /rides/{rideId}/accept | userId: {}", userService.getCurrentUserDetails().getId());
