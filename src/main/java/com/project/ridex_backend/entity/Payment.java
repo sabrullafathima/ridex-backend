@@ -1,5 +1,6 @@
 package com.project.ridex_backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project.ridex_backend.enums.PaymentMethod;
 import com.project.ridex_backend.enums.PaymentStatus;
 import jakarta.persistence.*;
@@ -33,6 +34,7 @@ public class Payment {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ride_id", nullable = false, unique = true)
+    @JsonIgnore
     private Ride ride;
 
     @Enumerated(EnumType.STRING)

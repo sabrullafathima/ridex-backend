@@ -28,13 +28,10 @@ public class UserServiceTest {
 
     @Test
     public void existsByEmail_delegatesToRepository() {
-        //Arrange
         when(userRepository.existsByEmail("username@example.com")).thenReturn(true);
 
-        //Act
         boolean exists = userRepository.existsByEmail("username@example.com");
 
-        //Assert
         assertThat(exists).isEqualTo(true);
         verify(userRepository).existsByEmail("username@example.com");
         verifyNoMoreInteractions(userRepository);

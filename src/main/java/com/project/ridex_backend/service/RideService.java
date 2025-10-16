@@ -1,5 +1,6 @@
 package com.project.ridex_backend.service;
 
+import com.project.ridex_backend.cache.RideCacheRedis;
 import com.project.ridex_backend.dto.request.PaymentRequest;
 import com.project.ridex_backend.dto.request.RideRequest;
 import com.project.ridex_backend.dto.response.RideResponse;
@@ -34,6 +35,7 @@ public class RideService {
     private final PaymentService paymentService;
     private final ApplicationEventPublisher eventPublisher;
     private final UserService userService;
+    private final RideCacheRedis rideCacheRedis;
 
 
     @Transactional
@@ -60,8 +62,7 @@ public class RideService {
     public RideResponse cancelRide(Long rideId, String cancelledBy) {
         logger.info("Processing ride cancellation by: {} | rideId: {}", cancelledBy, rideId );
 
-        Ride ride = rideRepository.findById(rideId)
-                .orElseThrow(() -> new RideNotFoundException("Ride not found"));
+        Ride ride = findRideById(rideId);
 
         RideStatus rideStatusBeforeCancel = ride.getStatus();
         UserType cancelledUserType = UserType.valueOf(cancelledBy);
@@ -75,7 +76,9 @@ public class RideService {
         }
 
         ride.setStatus(RideStatus.CANCELLED);
-        rideRepository.save(ride);
+        Ride uptedeRide = rideRepository.save(ride);
+        logger.info("update cancelledRide in DB successfully | rideStatus: {}", ride.getStatus());
+        rideCacheRedis.updateRide(uptedeRide);
 
         eventPublisher.publishEvent(new RideCancelledEvent(ride, cancelledUserType, rideStatusBeforeCancel));
 
@@ -98,8 +101,9 @@ public class RideService {
         ride.setDriver(securityUtil.extractCurrentUser());
         ride.setStatus(RideStatus.ACCEPTED);
         ride.setPayment(paymentService.createPayment(ride));
-        rideRepository.save(ride);
-        logger.info("Updated Ride successfully | DriverId: {}, Status: {}", ride.getDriver(), ride.getStatus());
+        Ride updatedRide = rideRepository.save(ride);
+        logger.info("update acceptedRide in DB successfully | rideStatus: {}", ride.getStatus());
+        rideCacheRedis.updateRide(updatedRide);
 
         eventPublisher.publishEvent(new RideAcceptedEvent(ride));
 
@@ -120,9 +124,9 @@ public class RideService {
         }
 
         ride.setStatus(RideStatus.STARTED);
-        rideRepository.save(ride);
-
-        logger.info("Ride started successfully | rideId: {} | driverId: {}", ride.getId(), ride.getDriver().getId());
+        Ride uptedeRide = rideRepository.save(ride);
+        logger.info("update startedRide in DB successfully | rideStatus: {}", ride.getStatus());
+        rideCacheRedis.updateRide(uptedeRide);
 
         eventPublisher.publishEvent(new RideStartedEvent(ride));
 
@@ -143,9 +147,9 @@ public class RideService {
         }
 
         ride.setStatus(RideStatus.COMPLETED);
-        rideRepository.save(ride);
+        Ride uptedeRide = rideRepository.save(ride);
         logger.info("Updated Ride successfully | rideId: {} | DriverId: {} | Status: {}", ride.getId(), ride.getDriver(), ride.getStatus());
-
+        rideCacheRedis.updateRide(uptedeRide);
 
         PaymentRequest paymentRequest = PaymentRequest.builder()
                 .pickupLocation(ride.getPickup())
@@ -178,12 +182,10 @@ public class RideService {
 
 
     private Ride findRideById(Long rideId) {
-        logger.info("finding Ride by | riderId: {}", rideId);
-
-        return rideRepository.findById(rideId).orElseThrow(() -> {
-            logger.error("Ride NOT_FOUND | rideId: {}", rideId);
-            return new RideNotFoundException("Ride NOT_FOUND | rideId: " + rideId);
-        });
+        logger.info("Finding ride from DB | rideId: {}", rideId);
+        Ride ride = rideRepository.findById(rideId).orElseThrow(() -> new RideNotFoundException("Ride not found"));
+        logger.info("Found ride SSuccessfully from DB | rideId: {}", ride.getId());
+        return ride;
     }
 
 

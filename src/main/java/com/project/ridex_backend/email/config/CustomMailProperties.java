@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @Configuration
 @ConfigurationProperties(prefix = "mail")
-public class MailProperties {
+public class CustomMailProperties {
     private String host;
     private int port;
     private String username;

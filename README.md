@@ -1,9 +1,16 @@
+
 Ridex Backend
 =============
-Ridex is a mini Uber-like ride-hailing application backend 
-built using Spring Boot, Java 21, Spring Security (JWT), WebSockets, and MySQL. 
-It supports user registration, ride requests, ride acceptance, real-time notifications, payment processing, 
-and email notifications.
+Ridex is a mini Uber-like ride-hailing backend application 
+built with Spring Boot, Java 21, Spring Security (JWT), WebSockets, Redis, and MySQL.
+It supports user registration, ride requests, ride acceptance, ride start, ride completion, ride cancellation, 
+real-time notifications, simulated payment processing, and email notifications.
+
+Latest Updates
+==============
+[v1.2.0] - 2025-10-17
+-> Added Redis caching for rides to improve read performance and reduce database hits.
+-> Minor code cleanup and logging improvements.
 
 Features
 =========
@@ -14,6 +21,7 @@ Features
 -> Simulated payment processing and fare calculation
 -> JWT-based authentication and role-based authorization
 -> Event-driven architecture for ride notifications
+-> Redis caching for ride entities to reduce DB load and improve performance
 
 Tech Stack
 ==========
@@ -21,6 +29,7 @@ Tech Stack
 -> Database: MySQL
 -> Security: Spring Security, JWT
 -> WebSockets: STOMP protocol
+-> Cache: Redis
 -> Email: JavaMailSender, Mailtrap
 -> Build Tool: Maven
 
@@ -43,6 +52,10 @@ Setup & Installation
    MAILTRAP_USER_NAME=<username>
    MAILTRAP_PASSWORD=<password>
    MAILTRAP_EMAIL=<from_email>
+
+   # Redis
+   REDIS_HOST=localhost
+   REDIS_PORT=6379
 
 3. Create database:
    ----------------

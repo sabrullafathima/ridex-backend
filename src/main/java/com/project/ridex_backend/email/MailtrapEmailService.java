@@ -1,6 +1,6 @@
 package com.project.ridex_backend.email;
 
-import com.project.ridex_backend.email.config.MailProperties;
+import com.project.ridex_backend.email.config.CustomMailProperties;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ public class MailtrapEmailService implements EmailService {
     private static final Logger logger = LoggerFactory.getLogger(MailtrapEmailService.class);
 
     private final JavaMailSender mailSender;
-    private final MailProperties mailProperties;
+    private final CustomMailProperties customMailProperties;
 
     @Override
     public void sendEmail(String to, String subject, String body) {
@@ -22,7 +22,7 @@ public class MailtrapEmailService implements EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(to);
-            message.setFrom(mailProperties.getFrom());
+            message.setFrom(customMailProperties.getFrom());
             message.setSubject(subject);
             message.setText(body);
 

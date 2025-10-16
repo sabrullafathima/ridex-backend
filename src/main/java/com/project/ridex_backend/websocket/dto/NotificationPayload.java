@@ -20,3 +20,4 @@ public class NotificationPayload {
     private LocalDateTime createdAt;
     private NotificationType type;
 }
+

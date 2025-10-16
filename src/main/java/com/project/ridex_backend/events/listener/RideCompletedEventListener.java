@@ -18,6 +18,7 @@ public class RideCompletedEventListener {
     private static final Logger logger = LoggerFactory.getLogger(RideCompletedEventListener.class);
 
     private final NotificationService notificationService;
+
     @EventListener
 //   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onRideCompleted(RideCompletedEvent e) {
