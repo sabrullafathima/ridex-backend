@@ -116,6 +116,23 @@
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.2.2</version>
+				<executions>
+					<execution>
+						<phase>verify</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<failOnViolation>false</failOnViolation>
+				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<annotationProcessorPaths>
@@ -159,6 +176,28 @@
 							<goal>report</goal>
 						</goals>
 					</execution>
+
+<!--					<execution>-->
+<!--						<id>check</id>-->
+<!--						<goals>-->
+<!--							<goal>check</goal>-->
+<!--						</goals>-->
+<!--						<configuration>-->
+<!--							<rules>-->
+<!--								<rule>-->
+<!--									<element>BUNDLE</element>-->
+<!--									<limits>-->
+<!--										<limit>-->
+<!--											<counter>INSTRUCTION</counter>-->
+<!--											<value>COVEREDRATIO</value>-->
+<!--											<minimum>0.75</minimum> &lt;!&ndash; set threshold &ndash;&gt;-->
+<!--										</limit>-->
+<!--									</limits>-->
+<!--								</rule>-->
+<!--							</rules>-->
+<!--						</configuration>-->
+<!--					</execution>-->
+
 				</executions>
 			</plugin>
 		</plugins>
