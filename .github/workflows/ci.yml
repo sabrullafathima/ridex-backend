@@ -1,0 +1,63 @@
+name: Basic CI
+
+on:
+  push:
+    branches: [ci-test]
+  pull_request:
+    branches: [ci-test]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Cache Maven packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Compile
+        run: mvn clean install -DskipTests
+
+      - name: Run Checkstyle
+        run: mvn checkstyle:check
+
+#      - name: Run unit tests and check coverage
+#        run: mvn clean verify
+
+      - name: Run unit tests
+        run: mvn test
+
+      - name: Generate coverage report
+        run: mvn jacoco:report
+
+      - name: Upload Generated JaCoCo report to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-report
+          path: target/site/jacoco/
+
+      - name: Build Package
+        run: mvn clean package -DskipTests
+
+      - name: Rename jar
+        run: mv target/*.jar target/ridex-backend.jar
+
+      - name: Upload built package to artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ridex-backend-artifact
+          path: target/ridex-backend.jar
+
