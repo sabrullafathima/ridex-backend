@@ -1,0 +1,32 @@
+name: CD - Deploy to AWS Elastic Beanstalk
+
+on:
+  push:
+    branches: [ master ]  # Only deploy after merge to master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download CI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ridex-backend-artifact
+          path: target/
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v21
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: ${{ secrets.EB_APPLICATION_NAME }}
+          environment_name: ${{ secrets.EB_ENV_NAME }}
+          version_label: v-${{ github.run_number }}
+          region: ${{ secrets.AWS_REGION }}
+          s3_bucket: ${{ secrets.S3_BUCKET }}
+          s3_key: myapp-${{ github.run_number }}.jar
+          file: target/ridex-backend.jar
