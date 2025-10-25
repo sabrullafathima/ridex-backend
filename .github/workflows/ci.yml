@@ -2,9 +2,11 @@ name: Basic CI
 
 on:
   push:
-    branches: [ci-test]
+    branches:
+      - 'fix/*'
+      - 'feature/*'
   pull_request:
-    branches: [ci-test]
+    branches: [master]
 
 jobs:
   build:
