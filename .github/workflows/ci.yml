@@ -49,15 +49,3 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco/
 
-      - name: Build Package
-        run: mvn clean package -DskipTests
-
-      - name: Rename jar
-        run: mv target/*.jar target/ridex-backend.jar
-
-      - name: Upload built package to artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ridex-backend-artifact
-          path: target/ridex-backend.jar
-
